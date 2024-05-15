@@ -7,12 +7,16 @@ import static org.mifos.connector.tnm.camel.config.CamelProperties.CUSTOM_HEADER
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.mifos.connector.common.camel.ErrorHandlerRouteBuilder;
 import org.mifos.connector.common.channel.dto.TransactionStatusResponseDTO;
+import org.mifos.connector.tnm.dto.PayBillErrorResponse;
 import org.mifos.connector.tnm.dto.PayBillValidationResponseDto;
 import org.mifos.connector.tnm.dto.TnmPayBillPayRequestDto;
+import org.mifos.connector.tnm.exception.TNMConnectorException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 /**
@@ -27,10 +31,12 @@ public class PayBillRoute extends ErrorHandlerRouteBuilder {
 
     @Override
     public void configure() {
+
+        onException(Exception.class).to("direct:error-response").handled(true);
+
         // Validate Route
         from("rest:GET:/paybill/validate/{clientAccountNumber}").id("paybill-validation-route")
-                .log(LoggingLevel.INFO, " ## PayBill validation request").to("direct:account-status").unmarshal()
-                .json(JsonLibrary.Jackson, PayBillValidationResponseDto.class)
+                .to("direct:account-status").unmarshal().json(JsonLibrary.Jackson, PayBillValidationResponseDto.class)
                 .log("## Is reconciled: ${body.isReconciled}").choice().when().simple("${body.isReconciled} == 'true'")
                 .to("direct:start-paybill-workflow").to("direct:paybill-validation-response-success").otherwise()
                 .to("direct:paybill-validation-response-failure").end();
@@ -82,5 +88,18 @@ public class PayBillRoute extends ErrorHandlerRouteBuilder {
                 .log(LoggingLevel.DEBUG, "Status: ${header.CamelHttpResponseCode}")
                 .log(LoggingLevel.DEBUG, "Channel Trx status response: \n\n.. ${body}");
 
+        from("direct:error-response").id("error-response")
+                .log(LoggingLevel.ERROR, "Error message: ${exception.message}")
+                .log(LoggingLevel.ERROR, "Error: ${exception}").process(exchange -> {
+                    Exception exception = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
+                    PayBillErrorResponse errorResponse = new PayBillErrorResponse();
+                    errorResponse.setMessage(exception.getMessage());
+                    exchange.getIn().setBody(errorResponse);
+                    HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+                    if (exception instanceof TNMConnectorException tnmConnectorException) {
+                        httpStatus = tnmConnectorException.getHttpStatus();
+                    }
+                    exchange.getIn().setHeader(Exchange.HTTP_RESPONSE_CODE, httpStatus.value());
+                }).marshal().json(JsonLibrary.Jackson);
     }
 }

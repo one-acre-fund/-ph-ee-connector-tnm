@@ -4,7 +4,8 @@ WORKDIR /ph-ee-connector-tnm
 
 COPY . .
 
-RUN ./gradlew bootJar
+RUN if ls build/libs/ph-ee-connector-tnm-*.jar 1>  /dev/null 2>&1 ; then echo "Using Already built JAR";  \
+    else ./gradlew bootJar ; fi
 
 FROM eclipse-temurin:17-alpine
 

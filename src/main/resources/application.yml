@@ -43,5 +43,5 @@ paybill:
       currency: ${ACCOUNTS_FINERACT_CURRENCY:MWK}
     - business-short-code: ${ACCOUNTS_ROSTER_PAYBILL_SHORTCODE:12345678}
       ams: "roster"
-      base-url: ${ACCOUNTS_ROSTER_BASEURL}
+      base-url: ${ACCOUNTS_ROSTER_BASEURL:http://localhost:5000}
       currency: ${ACCOUNTS_ROSTER_CURRENCY:MWK}

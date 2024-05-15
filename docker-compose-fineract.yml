@@ -118,6 +118,7 @@ services:
       - "5005:5000"
     environment:
       ZEEBE_BROKER_CONTACTPOINT: zeebe:26500
+      CHANNEL_HOST: "http://channel-connector:8080"
     depends_on:
       zeebe:
         condition: service_healthy

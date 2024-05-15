@@ -50,6 +50,8 @@ import org.mifos.connector.tnm.dto.ChannelRequestDto;
 import org.mifos.connector.tnm.dto.ChannelValidationRequestDto;
 import org.mifos.connector.tnm.dto.PayBillValidationResponseDto;
 import org.mifos.connector.tnm.dto.TnmPayBillPayRequestDto;
+import org.mifos.connector.tnm.exception.MissingFieldException;
+import org.mifos.connector.tnm.exception.TNMConnectorJsonProcessingException;
 import org.mifos.connector.tnm.util.TnmUtils;
 import org.mifos.connector.tnm.zeebe.ZeebeVariables;
 import org.springframework.beans.factory.annotation.Value;
@@ -95,7 +97,7 @@ public class PayBillRouteProcessor {
                 || Boolean.parseBoolean(getAccountDetails.toString());
 
         if (Objects.isNull(msisdn)) {
-            throw new RuntimeException("MSISDN is required for PayBill validation");
+            throw new MissingFieldException("MSISDN is required for PayBill validation");
         }
 
         AmsProperties amsProperties = amsPayBillProps
@@ -120,7 +122,7 @@ public class PayBillRouteProcessor {
         try {
             return objectMapper.writeValueAsString(obj);
         } catch (JsonProcessingException ex) {
-            throw new RuntimeException(ex);
+            throw new TNMConnectorJsonProcessingException(ex.getMessage(), ex);
         }
     }
 
@@ -160,7 +162,7 @@ public class PayBillRouteProcessor {
         try {
             return objectMapper.writeValueAsString(gsmaTransfer);
         } catch (JsonProcessingException ex) {
-            throw new RuntimeException(ex);
+            throw new TNMConnectorJsonProcessingException(ex.getMessage(), ex);
         }
     }
 
@@ -174,14 +176,14 @@ public class PayBillRouteProcessor {
         TnmPayBillPayRequestDto requestDto = e.getIn().getBody(TnmPayBillPayRequestDto.class);
         log.debug("PayBill Response: {}", requestDto);
         log.debug("Is oafTransactionReference present: {}", requestDto.getOafValidationRef());
+        final Object currencyFromHeaders = e.getIn().getHeader(CURRENCY);
+        final Object shortCodeFromReq = e.getIn().getHeader(BUSINESS_SHORT_CODE);
 
-        String shortCodeFromReq = e.getIn().getHeader(BUSINESS_SHORT_CODE).toString();
-        String currencyFromHeaders = e.getIn().getHeader(CURRENCY).toString();
-
-        AmsProperties amsProperties = amsPayBillProps.getAmsPropertiesFromShortCode(
-                Objects.nonNull(shortCodeFromReq) ? shortCodeFromReq : amsPayBillProps.getDefaultAmsShortCode());
+        AmsProperties amsProperties = amsPayBillProps
+                .getAmsPropertiesFromShortCode(Objects.nonNull(shortCodeFromReq) ? shortCodeFromReq.toString()
+                        : amsPayBillProps.getDefaultAmsShortCode());
         final String amsName = amsProperties.getAms();
-        final String currency = Objects.nonNull(currencyFromHeaders) ? currencyFromHeaders
+        final String currency = Objects.nonNull(currencyFromHeaders) ? currencyFromHeaders.toString()
                 : amsProperties.getCurrency();
         final String amsUrl = amsProperties.getBaseUrl();
 
@@ -249,7 +251,7 @@ public class PayBillRouteProcessor {
         Object tnmTransactionId = exchange.getIn().getHeader(PAYBILL_TRANSACTION_ID_URL_PARAM);
 
         if (Objects.isNull(tnmTransactionId) || !StringUtils.hasText(tnmTransactionId.toString())) {
-            throw new RuntimeException("Transaction id is mandatory");
+            throw new MissingFieldException("Transaction id is mandatory");
         }
 
         exchange.getIn().removeHeaders("*");

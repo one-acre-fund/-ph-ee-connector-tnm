@@ -109,6 +109,8 @@ services:
     depends_on:
       zeebe:
         condition: service_healthy
+    networks:
+      - zeebe_network
 
   tnm-mw-connector:
     build:
@@ -118,25 +120,32 @@ services:
       - "5005:5000"
     environment:
       ZEEBE_BROKER_CONTACTPOINT: zeebe:26500
+      CHANNEL_HOST: "http://channel-connector:8080"
+      ACCOUNTS_ROSTER_BASEURL: "http://host.docker.internal:5000"
     depends_on:
       zeebe:
         condition: service_healthy
+    networks:
+      - zeebe_network
 
   roster-ams:
-    image: ph-ee-connector-ams-pesa-roster-ams:latest
+    image: oaftech.azurecr.io/oneacrefund/ph-ee-connector-ams-pesa:1.0.1-mifos-1.3.1.2024.05.10.2
     ports:
       - "8083:8080"
       - "5003:5000"
     environment:
       AMS_LOCAL_ENABLED: true
-      FINERACT_BASE-URL: https://loans.qa.oneacrefund.org/fineract-provider/api/v1
       LOGGING_LEVEL_ROOT: INFO
       SPRING_PROFILES_ACTIVE:
       ZEEBE_BROKER_CONTACTPOINT: zeebe:26500
       LOGGING_PATTERN_CONSOLE: "%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger.%M - %msg%n"
+      PESACORE_AUTH-HEADER: 51f56774-8ef6-11ec-b909-0242ac120002
+      PESACORE_BASE-URL : https://opswebsitetest.oaftemp.org
     depends_on:
       zeebe:
         condition: service_healthy
+    networks:
+      - zeebe_network
 
   operations-mysql:
     image: mysql:5.7
@@ -152,12 +161,15 @@ services:
     image: oaftech.azurecr.io/oneacrefund/ph-ee-importer-rdbms:1.0.0-mifos-1.3.1
     restart: always
     environment:
-      LOGGING_LEVEL_ROOT: debug
+      LOGGING_LEVEL_ROOT: info
       DATASOURCE_CORE_HOST: operations-mysql
       DATASOURCE_CORE_USERNAME: root
       DATASOURCE_CORE_PASSWORD: mysql
       DATASOURCE_CORE_SCHEMA: tenants
       KAFKA_BROKERS: "http://kafka:9092"
+      BPMN_PROCESSES_0__ID: "inbound_tnm_fineract"
+      BPMN_PROCESSES_0__DIRECTION: "$${bpmn.incoming-direction}"
+      BPMN_PROCESSES_0__TYPE: "$${bpmn.transfer-type}"
     ports:
       - "5007:3306"
     depends_on:
@@ -166,12 +178,13 @@ services:
       - zeebe_network
 
   operations-app:
-    build: .
+    image: oaf--ph-ee-operations-app-operations-app:latest
     ports:
       - 5006:5000
     environment:
       FINERACT_DATASOURCE_CORE_HOST: operations-mysql
       SPRING_PROFILES_ACTIVE: bb
+      TENANTS: oaf
     depends_on:
       - operations-mysql
       - rdbms-importer-rdbms
