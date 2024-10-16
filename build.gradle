@@ -18,9 +18,13 @@ repositories {
     maven {
         url = uri('https://jfrog.sandbox.fynarfin.io/artifactory/fyn-libs-snapshot')
     }
+    maven { url 'https://repo.spring.io/milestone' }
+    maven { url 'https://repo.spring.io/snapshot' }
 }
 
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.mifos:ph-ee-connector-common:1.5.1-SNAPSHOT'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation "org.apache.camel.springboot:camel-spring-boot-starter:${camelCoreVersion}"
