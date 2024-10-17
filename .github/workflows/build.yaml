@@ -37,11 +37,11 @@ jobs:
 
     - name: Generate image tags
       run: |
-        VERSION_TAG=$(./gradlew -q printVersion)
+        VERSION_TAG=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')
         IMAGE_TAGS="${VERSION_TAG}.$(date '+%Y.%m.%d').${REVISION}"
         if [ "${{ github.ref }}" == "refs/heads/main" ]; then IMAGE_TAGS="$VERSION_TAG"; fi
         echo "IMAGE_TAGS=$IMAGE_TAGS" >> $GITHUB_ENV
-
+        
     - name: Gradlew build
       run: |
         ./gradlew bootJar --info --build-cache 
