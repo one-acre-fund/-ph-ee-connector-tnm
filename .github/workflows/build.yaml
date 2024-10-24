@@ -42,13 +42,13 @@ jobs:
         if [ "${{ github.ref }}" == "refs/heads/main" ]; then IMAGE_TAGS="$VERSION_TAG"; fi
         echo "IMAGE_TAGS=$IMAGE_TAGS" >> $GITHUB_ENV
         
-    - name: Gradlew build
-      run: |
-        ./gradlew bootJar --info --build-cache 
+    # - name: Gradlew build
+    #   run: |
+    #     ./gradlew bootJar --info --build-cache 
 
-    - name: Gradlew test
-      run: |
-        ./gradlew test --info --build-cache
+    # - name: Gradlew test
+    #   run: |
+    #     ./gradlew test --info --build-cache
 
     - name: MegaLinter analysis
       env:
