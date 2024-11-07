@@ -20,6 +20,10 @@ zeebe:
   wait-tnm-pay-request-period: 60
 
 management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
   endpoint:
     health:
       probes:
