@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '2.7.6'
     id 'io.spring.dependency-management' version '1.0.15.RELEASE'
     id 'com.diffplug.spotless' version '6.19.0' apply false
+    id 'jacoco'
 }
 
 group = 'org.mifos.connector'
@@ -37,6 +38,11 @@ dependencies {
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'junit:junit:4.11'
+    testImplementation 'org.mockito:mockito-core:3.12.4'
+    testImplementation "org.apache.camel:camel-test-spring-junit5:${camelCoreVersion}"
+    testImplementation "org.apache.camel:camel-mock:${camelCoreVersion}"
 }
 allprojects {
     apply plugin: 'com.diffplug.spotless'
@@ -102,6 +108,16 @@ allprojects {
 
     compileJava.dependsOn spotlessApply
 }
+jacocoTestReport {
+    dependsOn test // Ensures tests are run before generating the report
+    reports {
+        xml.required = true // Enable XML report generation
+        html.required = true // Enable HTML report generation
+        xml.outputLocation = file("${buildDir}/jacoco/testCoverage.xml") // XML output location
+        html.outputLocation = file("${buildDir}/reports/jacoco/test") // HTML output location
+    }
+}
 tasks.named('test') {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
 }
