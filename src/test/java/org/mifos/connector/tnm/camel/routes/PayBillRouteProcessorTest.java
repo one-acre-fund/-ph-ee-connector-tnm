@@ -115,7 +115,8 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
         Assertions.assertEquals("fineract", exchange.getIn().getHeader("amsName"));
     }
 
-    @DisplayName("Successfully builds account status request body with all required headers present but without the currency and short code")
+    @DisplayName("Successfully builds account status request body with all required headers present but "
+            + "without the currency and short code")
     @Test
     void test_build_body_with_valid_headers_without_currency_and_short_code() throws JsonProcessingException {
         Exchange exchange = camelContext.getEndpoint("mock:test").createExchange();
@@ -221,16 +222,16 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
         requestDto.setTransactionAmount("100");
         requestDto.setAccountNumber("ACC123");
 
-        Exchange exchange = mock(Exchange.class);
         AmsProperties amsProps = new AmsProperties();
         amsProps.setAms("TEST-AMS");
         amsProps.setCurrency("USD");
         amsProps.setBaseUrl("http://test-url");
         when(amsPayBillProps.getAmsPropertiesFromShortCode(any())).thenReturn(amsProps);
         when(zeebeClient.newPublishMessageCommand()).thenReturn(mock(PublishMessageCommandStep1.class));
+        Exchange exchange = mock(Exchange.class);
         when(producerTemplate.send(eq("direct:paybill-transaction-status-check-base"), any(Processor.class))).thenAnswer(invocation -> {
-            Processor processor = invocation.getArgument(1, Processor.class);
-            processor.process(exchange);
+            Processor processor1 = invocation.getArgument(1, Processor.class);
+            processor1.process(exchange);
             return exchange;
         });
         Message message = mock(Message.class);
@@ -292,8 +293,8 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
         when(amsPayBillProps.getAmsPropertiesFromShortCode(any())).thenReturn(amsProps);
         when(zeebeClient.newPublishMessageCommand()).thenReturn(mock(PublishMessageCommandStep1.class));
         when(producerTemplate.send(eq("direct:paybill-transaction-status-check-base"), any(Processor.class))).thenAnswer(invocation -> {
-            Processor processor = invocation.getArgument(1, Processor.class);
-            processor.process(exchange);
+            Processor processor1 = invocation.getArgument(1, Processor.class);
+            processor1.process(exchange);
             return exchange;
         });
 
@@ -323,7 +324,6 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
 
         // Assert
         verify(zeebeClient).newPublishMessageCommand();
-        // verify(zeebeClient).newCreateInstanceCommand();
     }
 
     @DisplayName("Validate transaction ID that does not exist in the system")
