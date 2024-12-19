@@ -1,7 +1,6 @@
 package org.mifos.connector.tnm.dto;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -22,8 +21,10 @@ class TnmPayBillPayRequestDtoTest {
         request.setMsisdn("254712345149");
         request.setFirstname("John");
 
-        String expected = "PayBillRequestDTO{transactionType='Pay Bill', transactionID='RKTQDM7W6S', transactionAmount='10', shortCode='600638', billRefNo='A123', invoiceNumber='INV001', accountBalance='49197.00', thirdPatrytransactionID='TPT123', msisdn='254712345149', firstname='John'}";
-        assertEquals(expected, request.toString());
+        String expected = "PayBillRequestDTO{transactionType='Pay Bill', transactionID='RKTQDM7W6S', "
+                + "transactionAmount='10', shortCode='600638', billRefNo='A123', invoiceNumber='INV001', "
+                + "accountBalance='49197.00', thirdPatrytransactionID='TPT123', msisdn='254712345149', firstname='John'}";
+        Assertions.assertEquals(expected, request.toString());
     }
 
     @DisplayName("Returns correct string when all fields are null")
@@ -31,8 +32,10 @@ class TnmPayBillPayRequestDtoTest {
     void test_null_fields_string_representation() {
         TnmPayBillPayRequestDto request = new TnmPayBillPayRequestDto();
 
-        String expected = "PayBillRequestDTO{transactionType='null', transactionID='null', transactionAmount='null', shortCode='null', billRefNo='null', invoiceNumber='null', accountBalance='null', thirdPatrytransactionID='null', msisdn='null', firstname='null'}";
-        assertEquals(expected, request.toString());
+        String expected = "PayBillRequestDTO{transactionType='null', transactionID='null', transactionAmount='null', "
+                + "shortCode='null', billRefNo='null', invoiceNumber='null', accountBalance='null', "
+                + "thirdPatrytransactionID='null', msisdn='null', firstname='null'}";
+        Assertions.assertEquals(expected, request.toString());
     }
 
 }

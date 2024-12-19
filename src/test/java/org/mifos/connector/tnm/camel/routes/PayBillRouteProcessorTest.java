@@ -1,11 +1,24 @@
 package org.mifos.connector.tnm.camel.routes;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mifos.connector.tnm.camel.config.CamelProperties.*;
+import static org.mifos.connector.tnm.camel.config.CamelProperties.ACCOUNT_HOLDING_INSTITUTION_ID;
+import static org.mifos.connector.tnm.camel.config.CamelProperties.AMS_NAME;
+import static org.mifos.connector.tnm.camel.config.CamelProperties.BUSINESS_SHORT_CODE;
+import static org.mifos.connector.tnm.camel.config.CamelProperties.CLIENT_ACCOUNT_NUMBER;
+import static org.mifos.connector.tnm.camel.config.CamelProperties.CLIENT_NAME;
+import static org.mifos.connector.tnm.camel.config.CamelProperties.CONTENT_TYPE;
+import static org.mifos.connector.tnm.camel.config.CamelProperties.GET_ACCOUNT_DETAILS_FLAG;
+import static org.mifos.connector.tnm.camel.config.CamelProperties.PAYBILL_TRANSACTION_ID_URL_PARAM;
+import static org.mifos.connector.tnm.camel.config.CamelProperties.SECONDARY_IDENTIFIER_NAME;
+import static org.mifos.connector.tnm.camel.config.CamelProperties.TENANT_ID;
+import static org.mifos.connector.tnm.camel.config.CamelProperties.X_CORRELATION_ID;
 import static org.mifos.connector.tnm.zeebe.ZeebeVariables.CURRENCY;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,8 +28,13 @@ import io.camunda.zeebe.client.api.command.CreateProcessInstanceCommandStep1;
 import io.camunda.zeebe.client.api.command.PublishMessageCommandStep1;
 import io.camunda.zeebe.client.api.response.PublishMessageResponse;
 import java.util.UUID;
-import org.apache.camel.*;
+import org.apache.camel.CamelContext;
+import org.apache.camel.Exchange;
+import org.apache.camel.Message;
+import org.apache.camel.Processor;
+import org.apache.camel.ProducerTemplate;
 import org.json.JSONObject;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -81,17 +99,20 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
         String result = processor.buildBodyForAccountStatus(exchange);
         ChannelValidationRequestDto requestDto = objectMapper.readValue(result, ChannelValidationRequestDto.class);
 
-        assertNotNull(result);
-        assertEquals("fineractAccountID", requestDto.getPrimaryIdentifier().getKey());
-        assertEquals("12345", requestDto.getPrimaryIdentifier().getValue());
-        assertEquals("transactionId", requestDto.getCustomData().get(0).key);
-        assertDoesNotThrow(() -> UUID.fromString(requestDto.getCustomData().get(0).value.toString()), "transaction id is not a valid UUID");
-        assertEquals("currency", requestDto.getCustomData().get(1).key);
-        assertEquals("MWK", requestDto.getCustomData().get(1).value);
-        assertEquals("getAccountDetails", requestDto.getCustomData().get(2).key);
-        assertEquals(false, requestDto.getCustomData().get(2).value);
-        assertEquals("application/json", exchange.getIn().getHeader(CONTENT_TYPE));
-        assertEquals("fineract", exchange.getIn().getHeader("amsName"));
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals("fineractAccountID", requestDto.getPrimaryIdentifier().getKey());
+        Assertions.assertEquals("12345", requestDto.getPrimaryIdentifier().getValue());
+        Assertions.assertEquals("transactionId", requestDto.getCustomData().get(0).key);
+        Assertions.assertDoesNotThrow(() -> UUID.fromString(requestDto.getCustomData().get(0).value.toString()),
+                "transaction id is not a valid UUID");
+        Assertions.assertDoesNotThrow(() -> UUID.fromString(requestDto.getCustomData().get(0).value.toString()),
+                "transaction id is not a valid UUID");
+        Assertions.assertEquals("currency", requestDto.getCustomData().get(1).key);
+        Assertions.assertEquals("MWK", requestDto.getCustomData().get(1).value);
+        Assertions.assertEquals("getAccountDetails", requestDto.getCustomData().get(2).key);
+        Assertions.assertEquals(false, requestDto.getCustomData().get(2).value);
+        Assertions.assertEquals("application/json", exchange.getIn().getHeader(CONTENT_TYPE));
+        Assertions.assertEquals("fineract", exchange.getIn().getHeader("amsName"));
     }
 
     @DisplayName("Successfully builds account status request body with all required headers present but without the currency and short code")
@@ -116,17 +137,18 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
         String result = processor.buildBodyForAccountStatus(exchange);
         ChannelValidationRequestDto requestDto = objectMapper.readValue(result, ChannelValidationRequestDto.class);
 
-        assertNotNull(result);
-        assertEquals("fineractAccountID", requestDto.getPrimaryIdentifier().getKey());
-        assertEquals("12345", requestDto.getPrimaryIdentifier().getValue());
-        assertEquals("transactionId", requestDto.getCustomData().get(0).key);
-        assertDoesNotThrow(() -> UUID.fromString(requestDto.getCustomData().get(0).value.toString()), "transaction id is not a valid UUID");
-        assertEquals("currency", requestDto.getCustomData().get(1).key);
-        assertEquals("MWK", requestDto.getCustomData().get(1).value);
-        assertEquals("getAccountDetails", requestDto.getCustomData().get(2).key);
-        assertEquals(true, requestDto.getCustomData().get(2).value);
-        assertEquals("application/json", exchange.getIn().getHeader(CONTENT_TYPE));
-        assertEquals("fineract", exchange.getIn().getHeader("amsName"));
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals("fineractAccountID", requestDto.getPrimaryIdentifier().getKey());
+        Assertions.assertEquals("12345", requestDto.getPrimaryIdentifier().getValue());
+        Assertions.assertEquals("transactionId", requestDto.getCustomData().get(0).key);
+        Assertions.assertDoesNotThrow(() -> UUID.fromString(requestDto.getCustomData().get(0).value.toString()),
+                "transaction id is not a valid UUID");
+        Assertions.assertEquals("currency", requestDto.getCustomData().get(1).key);
+        Assertions.assertEquals("MWK", requestDto.getCustomData().get(1).value);
+        Assertions.assertEquals("getAccountDetails", requestDto.getCustomData().get(2).key);
+        Assertions.assertEquals(true, requestDto.getCustomData().get(2).value);
+        Assertions.assertEquals("application/json", exchange.getIn().getHeader(CONTENT_TYPE));
+        Assertions.assertEquals("fineract", exchange.getIn().getHeader("amsName"));
     }
 
     @DisplayName("Handles missing MSISDN by throwing MissingFieldException")
@@ -147,10 +169,10 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
 
         when(amsPayBillProps.getAmsPropertiesFromShortCode(anyString())).thenReturn(amsProperties);
 
-        MissingFieldException exception = assertThrows(MissingFieldException.class, () -> {
+        MissingFieldException exception = Assertions.assertThrows(MissingFieldException.class, () -> {
             processor.buildBodyForAccountStatus(exchange);
         });
-        assertEquals("MSISDN is required for PayBill validation", exception.getMessage());
+        Assertions.assertEquals("MSISDN is required for PayBill validation", exception.getMessage());
 
     }
 
@@ -177,14 +199,14 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
         String result = processor.buildBodyForStartPayBillWorkflow(exchange);
 
         // Assert
-        assertNotNull(result);
-        assertEquals("inst-123", exchange.getIn().getHeader(ACCOUNT_HOLDING_INSTITUTION_ID));
-        assertEquals("test-ams", exchange.getIn().getHeader(AMS_NAME));
-        assertEquals("application/json", exchange.getIn().getHeader(CONTENT_TYPE));
-        assertEquals("inst-123", exchange.getIn().getHeader(TENANT_ID));
-        assertEquals("test-txn-123", exchange.getIn().getHeader(X_CORRELATION_ID));
-        assertEquals("test-client", exchange.getIn().getHeader(CLIENT_NAME));
-        assertTrue((Boolean) exchange.getProperty("isValidationReferencePresent"));
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals("inst-123", exchange.getIn().getHeader(ACCOUNT_HOLDING_INSTITUTION_ID));
+        Assertions.assertEquals("test-ams", exchange.getIn().getHeader(AMS_NAME));
+        Assertions.assertEquals("application/json", exchange.getIn().getHeader(CONTENT_TYPE));
+        Assertions.assertEquals("inst-123", exchange.getIn().getHeader(TENANT_ID));
+        Assertions.assertEquals("test-txn-123", exchange.getIn().getHeader(X_CORRELATION_ID));
+        Assertions.assertEquals("test-client", exchange.getIn().getHeader(CLIENT_NAME));
+        Assertions.assertTrue((Boolean) exchange.getProperty("isValidationReferencePresent"));
     }
 
     @DisplayName("Successfully processes PayBill request with valid transaction ID and OAF reference")
@@ -200,15 +222,10 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
         requestDto.setAccountNumber("ACC123");
 
         Exchange exchange = mock(Exchange.class);
-        PublishMessageCommandStep1 publishMessageCommand = mock(PublishMessageCommandStep1.class);
-
-        Message message = mock(Message.class);
-
         AmsProperties amsProps = new AmsProperties();
         amsProps.setAms("TEST-AMS");
         amsProps.setCurrency("USD");
         amsProps.setBaseUrl("http://test-url");
-
         when(amsPayBillProps.getAmsPropertiesFromShortCode(any())).thenReturn(amsProps);
         when(zeebeClient.newPublishMessageCommand()).thenReturn(mock(PublishMessageCommandStep1.class));
         when(producerTemplate.send(eq("direct:paybill-transaction-status-check-base"), any(Processor.class))).thenAnswer(invocation -> {
@@ -216,6 +233,7 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
             processor.process(exchange);
             return exchange;
         });
+        Message message = mock(Message.class);
         when(exchange.getIn()).thenReturn(message);
         when(message.getBody(TnmPayBillPayRequestDto.class)).thenReturn(requestDto);
 
@@ -237,6 +255,7 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
                 PublishMessageCommandStep1.PublishMessageCommandStep3.class);
 
         ZeebeFuture<PublishMessageResponse> zeebeFutureMock = mock(ZeebeFuture.class);
+        PublishMessageCommandStep1 publishMessageCommand = mock(PublishMessageCommandStep1.class);
 
         when(zeebeClient.newPublishMessageCommand()).thenReturn(publishMessageCommand);
         when(publishMessageCommand.messageName(anyString())).thenReturn(publishMessageCommandStep2);
@@ -265,16 +284,11 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
         requestDto.setTransactionAmount("100");
         requestDto.setAccountNumber("ACC123");
 
-        Exchange exchange = mock(Exchange.class);
-        PublishMessageCommandStep1 publishMessageCommand = mock(PublishMessageCommandStep1.class);
-
-        Message message = mock(Message.class);
-
         AmsProperties amsProps = new AmsProperties();
         amsProps.setAms("TEST-AMS");
         amsProps.setCurrency("USD");
         amsProps.setBaseUrl("http://test-url");
-
+        Exchange exchange = mock(Exchange.class);
         when(amsPayBillProps.getAmsPropertiesFromShortCode(any())).thenReturn(amsProps);
         when(zeebeClient.newPublishMessageCommand()).thenReturn(mock(PublishMessageCommandStep1.class));
         when(producerTemplate.send(eq("direct:paybill-transaction-status-check-base"), any(Processor.class))).thenAnswer(invocation -> {
@@ -282,6 +296,8 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
             processor.process(exchange);
             return exchange;
         });
+
+        Message message = mock(Message.class);
         when(exchange.getIn()).thenReturn(message);
         when(message.getBody(TnmPayBillPayRequestDto.class)).thenReturn(requestDto);
 
@@ -292,6 +308,7 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
                 PublishMessageCommandStep1.PublishMessageCommandStep3.class);
 
         ZeebeFuture<PublishMessageResponse> zeebeFutureMock = mock(ZeebeFuture.class);
+        PublishMessageCommandStep1 publishMessageCommand = mock(PublishMessageCommandStep1.class);
 
         when(zeebeClient.newPublishMessageCommand()).thenReturn(publishMessageCommand);
         when(publishMessageCommand.messageName(anyString())).thenReturn(publishMessageCommandStep2);
@@ -313,23 +330,22 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
     @Test
     void test_validate_non_existing_transaction_id() {
         // Arrange
-        String transactionId = "test-123";
         Exchange mockExchange = mock(Exchange.class);
         Message mockMessage = mock(Message.class);
 
         when(producerTemplate.send(eq("direct:paybill-transaction-status-check-base"), any(Processor.class))).thenReturn(mockExchange);
         when(mockExchange.getIn()).thenReturn(mockMessage);
         when(mockMessage.getBody(String.class)).thenReturn(null);
+        String transactionId = "test-123";
 
         // Act & Assert
-        assertDoesNotThrow(() -> processor.validateUniqueTransactionId(transactionId));
+        Assertions.assertDoesNotThrow(() -> processor.validateUniqueTransactionId(transactionId));
     }
 
     @DisplayName("Handle JsonProcessingException during response deserialization")
     @Test
     void test_handle_json_processing_exception() {
         // Arrange
-        String transactionId = "test-123";
         String invalidJson = "invalid-json";
         Exchange mockExchange = mock(Exchange.class);
         Message mockMessage = mock(Message.class);
@@ -337,14 +353,15 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
         when(producerTemplate.send(eq("direct:paybill-transaction-status-check-base"), any(Processor.class))).thenReturn(mockExchange);
         when(mockExchange.getIn()).thenReturn(mockMessage);
         when(mockMessage.getBody(String.class)).thenReturn(invalidJson);
+        String transactionId = "test-123";
+
         // Act & Assert
-        assertThrows(JsonProcessingException.class, () -> processor.validateUniqueTransactionId(transactionId));
+        Assertions.assertThrows(JsonProcessingException.class, () -> processor.validateUniqueTransactionId(transactionId));
     }
 
     // Process response with COMMITTED transfer state throws exception
     @Test
     void test_committed_transfer_state() {
-        String transactionId = "test-123";
         String validJson = "{\"transferState\":\"COMMITTED\"}";
         Exchange mockExchange = mock(Exchange.class);
         Message mockMessage = mock(Message.class);
@@ -352,15 +369,16 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
         when(producerTemplate.send(eq("direct:paybill-transaction-status-check-base"), any(Processor.class))).thenReturn(mockExchange);
         when(mockExchange.getIn()).thenReturn(mockMessage);
         when(mockMessage.getBody(String.class)).thenReturn(validJson);
+        String transactionId = "test-123";
 
         // Act & Assert
-        assertThrows(TnmConnectorExistingTransactionIdException.class, () -> processor.validateUniqueTransactionId(transactionId));
+        Assertions.assertThrows(TnmConnectorExistingTransactionIdException.class,
+                () -> processor.validateUniqueTransactionId(transactionId));
     }
 
     @DisplayName("Process response with non-COMMITTED transfer state")
     @Test
     void test_non_committed_transfer_state() {
-        String transactionId = "test-123";
         String validJson = "{\"transferState\":\"RECEIVED\"}";
         Exchange mockExchange = mock(Exchange.class);
         Message mockMessage = mock(Message.class);
@@ -368,9 +386,10 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
         when(producerTemplate.send(eq("direct:paybill-transaction-status-check-base"), any(Processor.class))).thenReturn(mockExchange);
         when(mockExchange.getIn()).thenReturn(mockMessage);
         when(mockMessage.getBody(String.class)).thenReturn(validJson);
+        String transactionId = "test-123";
 
         // Act & Assert
-        assertDoesNotThrow(() -> processor.validateUniqueTransactionId(transactionId));
+        Assertions.assertDoesNotThrow(() -> processor.validateUniqueTransactionId(transactionId));
     }
 
     @DisplayName("Valid transaction ID in header leads to successful processing")
@@ -384,10 +403,10 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
 
         processor.processRequestForTransactionStatusCheck(exchange);
 
-        assertEquals("application/json", exchange.getIn().getHeader(CONTENT_TYPE));
-        assertEquals("transfers", exchange.getIn().getHeader("requestType"));
-        assertEquals("oaf", exchange.getIn().getHeader(TENANT_ID));
-        assertEquals("valid-transaction-id", exchange.getProperty(PAYBILL_TRANSACTION_ID_URL_PARAM));
+        Assertions.assertEquals("application/json", exchange.getIn().getHeader(CONTENT_TYPE));
+        Assertions.assertEquals("transfers", exchange.getIn().getHeader("requestType"));
+        Assertions.assertEquals("oaf", exchange.getIn().getHeader(TENANT_ID));
+        Assertions.assertEquals("valid-transaction-id", exchange.getProperty(PAYBILL_TRANSACTION_ID_URL_PARAM));
     }
 
     @DisplayName("Null transaction ID in header throws MissingFieldException")
@@ -398,7 +417,7 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
         Message message = exchange.getIn();
         message.setHeader(PAYBILL_TRANSACTION_ID_URL_PARAM, null);
 
-        assertThrows(MissingFieldException.class, () -> {
+        Assertions.assertThrows(MissingFieldException.class, () -> {
             processor.processRequestForTransactionStatusCheck(exchange);
         });
     }
@@ -411,7 +430,7 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
         Message message = exchange.getIn();
         message.setHeader(PAYBILL_TRANSACTION_ID_URL_PARAM, "");
 
-        assertThrows(MissingFieldException.class, () -> {
+        Assertions.assertThrows(MissingFieldException.class, () -> {
             processor.processRequestForTransactionStatusCheck(exchange);
         });
     }
@@ -433,12 +452,12 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
         String responseBody = exchange.getIn().getBody(String.class);
         JSONObject response = new JSONObject(responseBody);
 
-        assertEquals(200, response.getInt("status"));
-        assertEquals("Account exists", response.getString("message"));
-        assertEquals("corr-123", response.getString("oafTransactionReference"));
-        assertEquals("John Doe", response.getString("clientName"));
-        assertEquals("123", PayBillRouteProcessor.workflowInstanceStore.get("corr-123"));
-        assertFalse(PayBillRouteProcessor.reconciledStore.containsKey("corr-123"));
+        Assertions.assertEquals(200, response.getInt("status"));
+        Assertions.assertEquals("Account exists", response.getString("message"));
+        Assertions.assertEquals("corr-123", response.getString("oafTransactionReference"));
+        Assertions.assertEquals("John Doe", response.getString("clientName"));
+        Assertions.assertEquals("123", PayBillRouteProcessor.workflowInstanceStore.get("corr-123"));
+        Assertions.assertFalse(PayBillRouteProcessor.reconciledStore.containsKey("corr-123"));
     }
 
     @DisplayName("Processes error response")
@@ -452,10 +471,10 @@ class PayBillRouteProcessorTest extends ConnectorTemplateApplicationTests {
         processor.processResponseForPayBillValidationResponseError(exchange);
 
         JSONObject response = new JSONObject(exchange.getIn().getBody(String.class));
-        assertEquals(404, response.getInt("status"));
-        assertEquals("Account does not exists or payment not allowed", response.getString("message"));
-        assertNull(response.optString("clientName", null));
-        assertNull(response.optString("oafTransactionReference", null));
+        Assertions.assertEquals(404, response.getInt("status"));
+        Assertions.assertEquals("Account does not exists or payment not allowed", response.getString("message"));
+        Assertions.assertNull(response.optString("clientName", null));
+        Assertions.assertNull(response.optString("oafTransactionReference", null));
     }
 
 }

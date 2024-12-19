@@ -5,6 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 
+/**
+ * Test class for the ConnectorTemplateApplication.
+ */
 @CamelSpringBootTest
 @EnableAutoConfiguration
 @SpringBootTest

@@ -63,14 +63,14 @@ class PayBillResponseHandlingRouteTest extends ConnectorTemplateApplicationTests
     void test_payBill_response_success_with_transaction_id() {
 
         // Prepare the response body as a successful transaction
-        TransactionStatusResponseDTO transactionStatusResponseDTO = new TransactionStatusResponseDTO();
-        transactionStatusResponseDTO.setTransactionId("12345");
-        transactionStatusResponseDTO.setClientRefId("12345");
-        transactionStatusResponseDTO.setTransferId("54321");
-        transactionStatusResponseDTO.setTransferState(COMMITTED);
+        TransactionStatusResponseDTO transactionStatusResponseDto = new TransactionStatusResponseDTO();
+        transactionStatusResponseDto.setTransactionId("12345");
+        transactionStatusResponseDto.setClientRefId("12345");
+        transactionStatusResponseDto.setTransferId("54321");
+        transactionStatusResponseDto.setTransferState(COMMITTED);
         // Send the exchange to the route
         Exchange result = fluentProducerTemplate.to("direct:paybill-transaction-status-response-success")
-                .withBody(transactionStatusResponseDTO).send();
+                .withBody(transactionStatusResponseDto).send();
 
         String receivedBody = result.getIn().getBody(String.class);
         System.out.println("Received body: " + receivedBody);

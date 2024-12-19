@@ -1,12 +1,11 @@
 package org.mifos.connector.tnm.camel.routes;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import io.camunda.zeebe.client.api.command.ClientException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.FluentProducerTemplate;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mifos.connector.tnm.ConnectorTemplateApplicationTests;
@@ -41,8 +40,8 @@ class PayBillRouteTest extends ConnectorTemplateApplicationTests {
         System.out.println("Result: " + receivedBody);
         System.out.println("Result body: " + result.getIn().getBody().toString());
 
-        assertEquals(400, receivedBody.getStatus());
-        assertEquals("Connector error", receivedBody.getMessage());
+        Assertions.assertEquals(400, receivedBody.getStatus());
+        Assertions.assertEquals("Connector error", receivedBody.getMessage());
     }
 
     @DisplayName("Test error response route with JsonParseException")
@@ -58,8 +57,8 @@ class PayBillRouteTest extends ConnectorTemplateApplicationTests {
         Exchange result = fluentProducerTemplate.to("direct:error-response").withExchange(exchange).send();
         PayBillErrorResponse receivedBody = result.getIn().getBody(PayBillErrorResponse.class);
 
-        assertEquals(500, receivedBody.getStatus());
-        assertEquals("Internal error while processing the request. Please try again later.", receivedBody.getMessage());
+        Assertions.assertEquals(500, receivedBody.getStatus());
+        Assertions.assertEquals("Internal error while processing the request. Please try again later.", receivedBody.getMessage());
     }
 
     @DisplayName("Test error response route with ClientException")
@@ -78,8 +77,8 @@ class PayBillRouteTest extends ConnectorTemplateApplicationTests {
         System.out.println("Result: " + receivedBody.getStatus());
         System.out.println("Result body: " + result.getIn().getBody().toString());
 
-        assertEquals(503, receivedBody.getStatus());
-        assertEquals("Internal systems are not available. Please try again later.", receivedBody.getMessage());
+        Assertions.assertEquals(503, receivedBody.getStatus());
+        Assertions.assertEquals("Internal systems are not available. Please try again later.", receivedBody.getMessage());
     }
 
 }

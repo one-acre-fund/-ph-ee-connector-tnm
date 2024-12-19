@@ -1,12 +1,12 @@
 package org.mifos.connector.tnm.util;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mifos.connector.tnm.camel.config.CamelProperties.FINERACT_PRIMARY_IDENTIFIER_NAME;
 import static org.mifos.connector.tnm.camel.config.CamelProperties.ROSTER_PRIMARY_IDENTIFIER_NAME;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.json.JSONObject;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mifos.connector.common.channel.dto.TransactionStatusResponseDTO;
@@ -26,10 +26,10 @@ class TnmUtilsTest {
 
         JSONObject response = TnmUtils.buildPayBillTransactionResponseResponse(true, responseDto);
 
-        assertEquals(200, response.getInt("status"));
-        assertEquals("Payment successful", response.getString("message"));
-        assertEquals("transfer-123", response.getString("receipt_number"));
-        assertEquals("txn-123", response.getString("trans_id"));
+        Assertions.assertEquals(200, response.getInt("status"));
+        Assertions.assertEquals("Payment successful", response.getString("message"));
+        Assertions.assertEquals("transfer-123", response.getString("receipt_number"));
+        Assertions.assertEquals("txn-123", response.getString("trans_id"));
     }
 
     @DisplayName("Successful transaction with COMMITTED transfer state returns 200 status and success message")
@@ -42,8 +42,8 @@ class TnmUtilsTest {
 
         JSONObject response = TnmUtils.buildPayBillTransactionResponseResponse(true, responseDto);
 
-        assertEquals(404, response.getInt("status"));
-        assertEquals("Transaction not found", response.getString("message"));
+        Assertions.assertEquals(404, response.getInt("status"));
+        Assertions.assertEquals("Transaction not found", response.getString("message"));
     }
 
     @DisplayName("Handling null response parameter")
@@ -51,10 +51,10 @@ class TnmUtilsTest {
     void test_null_response_parameter() {
         JSONObject response = TnmUtils.buildPayBillTransactionResponseResponse(true, null);
 
-        assertEquals(404, response.getInt("status"));
-        assertEquals("Transaction not found", response.getString("message"));
-        assertFalse(response.has("receipt_number"));
-        assertFalse(response.has("trans_id"));
+        Assertions.assertEquals(404, response.getInt("status"));
+        Assertions.assertEquals("Transaction not found", response.getString("message"));
+        Assertions.assertFalse(response.has("receipt_number"));
+        Assertions.assertFalse(response.has("trans_id"));
     }
 
     @DisplayName("Response includes receipt_number and trans_id for successful transactions")
@@ -67,8 +67,8 @@ class TnmUtilsTest {
 
         JSONObject result = TnmUtils.buildPayBillTransactionResponseResponse(true, responseDto);
 
-        assertEquals("receipt123", result.get("receipt_number"));
-        assertEquals("trans123", result.get("trans_id"));
+        Assertions.assertEquals("receipt123", result.get("receipt_number"));
+        Assertions.assertEquals("trans123", result.get("trans_id"));
     }
 
     @DisplayName("Method returns JSONObject with status and message fields for all cases")
@@ -76,10 +76,10 @@ class TnmUtilsTest {
     void test_method_returns_status_and_message_fields() {
         JSONObject result = TnmUtils.buildPayBillTransactionResponseResponse(false, null);
 
-        assertTrue(result.has("status"));
-        assertTrue(result.has("message"));
-        assertEquals(404, result.get("status"));
-        assertEquals("Transaction not found", result.get("message"));
+        Assertions.assertTrue(result.has("status"));
+        Assertions.assertTrue(result.has("message"));
+        Assertions.assertEquals(404, result.get("status"));
+        Assertions.assertEquals("Transaction not found", result.get("message"));
     }
 
     @DisplayName("Successful transaction with non-null response of correct type processes normally")
@@ -92,8 +92,8 @@ class TnmUtilsTest {
 
         JSONObject result = TnmUtils.buildPayBillTransactionResponseResponse(true, responseDto);
 
-        assertEquals(200, result.get("status"));
-        assertEquals("Payment successful", result.get("message"));
+        Assertions.assertEquals(200, result.get("status"));
+        Assertions.assertEquals("Payment successful", result.get("message"));
     }
 
     @DisplayName("Successful transaction with COMMITTED transfer state returns 200 status and success message")
@@ -103,8 +103,8 @@ class TnmUtilsTest {
 
         JSONObject response = TnmUtils.buildPayBillTransactionResponseResponse(true, responseDto);
 
-        assertEquals(404, response.getInt("status"));
-        assertEquals("Transaction not found", response.getString("message"));
+        Assertions.assertEquals(404, response.getInt("status"));
+        Assertions.assertEquals("Transaction not found", response.getString("message"));
     }
 
     @DisplayName("Returns ROSTER_PRIMARY_IDENTIFIER_NAME when amsName is 'roster'")
@@ -112,13 +112,13 @@ class TnmUtilsTest {
     void test_returns_roster_identifier_for_roster_ams() {
         String amsName = "roster";
         String result = TnmUtils.getPrimaryIdentifierName(amsName);
-        assertEquals(ROSTER_PRIMARY_IDENTIFIER_NAME, result);
+        Assertions.assertEquals(ROSTER_PRIMARY_IDENTIFIER_NAME, result);
     }
 
     @DisplayName("Pass null as amsName parameter")
     @Test
     void test_null_ams_name_throws_exception() {
-        assertThrows(NullPointerException.class, () -> {
+        Assertions.assertThrows(NullPointerException.class, () -> {
             TnmUtils.getPrimaryIdentifierName(null);
         });
     }
@@ -128,7 +128,7 @@ class TnmUtilsTest {
     void test_returns_roster_identifier_for_fineract_ams() {
         String amsName = "fineract";
         String result = TnmUtils.getPrimaryIdentifierName(amsName);
-        assertEquals(FINERACT_PRIMARY_IDENTIFIER_NAME, result);
+        Assertions.assertEquals(FINERACT_PRIMARY_IDENTIFIER_NAME, result);
     }
 
     @DisplayName("Successfully converts TnmPayBillPayRequestDto to ChannelRequestDto with valid inputs")
@@ -144,13 +144,13 @@ class TnmUtilsTest {
 
         ChannelRequestDto result = TnmUtils.convertPayBillToChannelPayload(payBillRequest, amsName, currency);
 
-        assertNotNull(result);
-        assertEquals("254712345678", result.getPayer().getJSONObject("partyIdInfo").getString("partyIdentifier"));
-        assertEquals("MSISDN", result.getPayer().getJSONObject("partyIdInfo").getString("partyIdType"));
-        assertEquals("ACC123", result.getPayee().getJSONObject("partyIdInfo").getString("partyIdentifier"));
-        assertEquals("fineractAccountID", result.getPayee().getJSONObject("partyIdInfo").getString("partyIdType"));
-        assertEquals("100", result.getAmount().getString("amount"));
-        assertEquals("USD", result.getAmount().getString("currency"));
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals("254712345678", result.getPayer().getJSONObject("partyIdInfo").getString("partyIdentifier"));
+        Assertions.assertEquals("MSISDN", result.getPayer().getJSONObject("partyIdInfo").getString("partyIdType"));
+        Assertions.assertEquals("ACC123", result.getPayee().getJSONObject("partyIdInfo").getString("partyIdentifier"));
+        Assertions.assertEquals("fineractAccountID", result.getPayee().getJSONObject("partyIdInfo").getString("partyIdType"));
+        Assertions.assertEquals("100", result.getAmount().getString("amount"));
+        Assertions.assertEquals("USD", result.getAmount().getString("currency"));
     }
 
 }

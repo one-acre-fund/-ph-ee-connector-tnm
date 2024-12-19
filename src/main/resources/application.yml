@@ -1,7 +1,7 @@
 server:
   port: 8085
 camel:
-  server-port: 5019
+  server-port: 5000
   springboot:
     main-run-controller: true
   dataformat:
